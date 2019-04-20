@@ -1,0 +1,25 @@
+{
+  "name": "liushuangxi/neo4j-php",
+  "description": "neo4j client for php",
+  "type": "library",
+  "keywords": [
+    "neo4j",
+    "php"
+  ],
+  "time": "2019-04-20",
+  "authors": [
+    {
+      "name": "柳双喜",
+      "email": "729021170@163.com"
+    }
+  ],
+  "license": "MIT",
+  "autoload": {
+    "psr-0": {
+      "Everyman\\Neo4j": "src/lib/"
+    },
+    "psr-4": {
+      "Liushuangxi\\Neo4j\\": "src/neo4j-php"
+    }
+  }
+}
