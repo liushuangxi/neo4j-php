@@ -9,6 +9,8 @@ namespace Liushuangxi\Neo4j;
  */
 class RelationShip extends Object
 {
+    use SingletonTrait;
+
     /**
      * @var string
      */
@@ -24,24 +26,24 @@ class RelationShip extends Object
      */
     public function __construct()
     {
-        $this->node = new Node();
+        $this->node = Node::getInstance();
 
         parent::__construct();
     }
 
     /**
-     * @param $info
+     * @param array $info
      *  start_node
      *  start_node_id
      *  end_node
      *  end_node_id
      *  type
-     * 
-     * @param $properties
      *
-     * @return bool
+     * @param array $properties
+     *
+     * @return bool|int
      */
-    public function insert($info, $properties)
+    public function insert($info = [], $properties = [])
     {
         try {
             $startNode = null;
@@ -73,6 +75,13 @@ class RelationShip extends Object
                 return false;
             }
 
+            if (!empty($properties)) {
+                $object = $this->queryOne($type, $properties);
+                if (!empty($object)) {
+                    return $object->getId();
+                }
+            }
+
             $object = $this->client->makeRelationship();
             $object->setStartNode($startNode)
                 ->setEndNode($endNode)
@@ -80,7 +89,7 @@ class RelationShip extends Object
                 ->setProperties($properties)
                 ->save();
 
-            return true;
+            return $object->getId();
         } catch (\Exception $e) {
             Logger::logError(__CLASS__ . ' ' . __FUNCTION__ . ' ' . $e->getMessage());
 

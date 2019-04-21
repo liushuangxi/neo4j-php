@@ -9,20 +9,37 @@ namespace Liushuangxi\Neo4j;
  */
 class Node extends Object
 {
+    use SingletonTrait;
+
     /**
      * @var string
      */
     public $objectType = Object::OBJECT_TYPE_NODE;
 
     /**
-     * @param $properties
-     * @param $labels
+     * Node constructor.
+     */
+    public function __construct()
+    {
+        parent::__construct();
+    }
+
+    /**
+     * @param array $properties
+     * @param array $labels
      *
      * @return bool|int
      */
-    public function insert($properties, $labels)
+    public function insert($properties = [], $labels = [])
     {
         try {
+            if (isset($labels[0]) && !empty($labels[0])) {
+                $object = $this->queryOne($labels[0], $properties);
+                if (!empty($object)) {
+                    return $object->getId();
+                }
+            }
+
             $object = $this->client->makeNode();
             $object->setProperties($properties)->save();
 
@@ -35,7 +52,7 @@ class Node extends Object
                 $object->addLabels($labelObjects);
             }
 
-            return true;
+            return $object->getId();
         } catch (\Exception $e) {
             Logger::logError(__CLASS__ . ' ' . __FUNCTION__ . ' ' . $e->getMessage());
 
@@ -70,7 +87,7 @@ class Node extends Object
 
             $object->save();
 
-            return true;
+            return $object->getId();
         } catch (\Exception $e) {
             Logger::logError(__CLASS__ . ' ' . __FUNCTION__ . ' ' . $e->getMessage());
 
