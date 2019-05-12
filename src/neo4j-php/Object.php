@@ -12,7 +12,7 @@ use Everyman\Neo4j\Cypher\Query;
 class Object
 {
     const OBJECT_TYPE_NODE = 'node';
-    const OBJECT_TYPE_RELATION_TYPE = 'relation_ship';
+    const OBJECT_TYPE_RELATION_SHIP = 'relation_ship';
 
     /**
      * @var \Everyman\Neo4j\Client|null
@@ -30,6 +30,82 @@ class Object
     public function __construct()
     {
         $this->client = Client::getInstance();
+    }
+
+    /**
+     * @param string $group
+     *  node:label
+     *  relation_ship:property
+     *
+     * @param array  $params
+     *
+     * @return bool
+     */
+    public function deleteOne($group = '', $params = [])
+    {
+        $object = $this->queryOne($group, $params);
+        if (empty($object)) {
+            return false;
+        }
+
+        $objectId = $object->getId();
+        if (empty($objectId)) {
+            return false;
+        }
+
+        return $this->delete($objectId);
+    }
+
+    /**
+     * @param string $group
+     *  node:label
+     *  relation_ship:property
+     *
+     * @param array  $params
+     *
+     * @return \Everyman\Neo4j\Query\ResultSet|mixed|null
+     */
+    public function queryOne($group = '', $params = [])
+    {
+        $where = "";
+        if (!empty($params)) {
+            $where .= "WHERE ";
+            foreach ($params as $k => $v) {
+                $where .= "o.$k = \"$v\" AND ";
+            }
+            $where = trim($where, 'AND ');
+        }
+
+        $queryString = "";
+        switch ($this->objectType) {
+            case self::OBJECT_TYPE_NODE:
+                $queryString = "MATCH (o:$group) $where";
+                break;
+            case self::OBJECT_TYPE_RELATION_SHIP:
+                $queryString = "MATCH ()-[o:$group]-() $where";
+                break;
+        }
+        $queryString .= " RETURN o LIMIT 1";
+
+        try {
+            $query  = new Query($this->client, $queryString, []);
+            $result = $query->getResultSet();
+            if ($result->offsetExists(0)) {
+                $result = $result->offsetGet(0);
+                if ($result->offsetExists(0)) {
+                    $result = $result->offsetGet(0);
+                } else {
+                    $result = null;
+                }
+            } else {
+                $result = null;
+            }
+
+            return $result;
+        } catch (\Exception $e) {
+            Logger::logError(__CLASS__ . ' ' . __FUNCTION__ . ' ' . $e->getMessage());
+            return null;
+        }
     }
 
     /**
@@ -68,7 +144,7 @@ class Object
                 case self::OBJECT_TYPE_NODE:
                     $object = $this->client->getNode($id);
                     break;
-                case self::OBJECT_TYPE_RELATION_TYPE:
+                case self::OBJECT_TYPE_RELATION_SHIP:
                     $object = $this->client->getRelationship($id);
                     break;
             }
@@ -82,58 +158,6 @@ class Object
             Logger::logError(__CLASS__ . ' ' . __FUNCTION__ . ' ' . $e->getMessage());
 
             return false;
-        }
-    }
-
-    /**
-     * @param string $group
-     *  node:label
-     *  relation_ship:type
-     *
-     * @param array  $params
-     *
-     * @return \Everyman\Neo4j\Query\ResultSet|mixed|null
-     */
-    public function queryOne($group = '', $params = [])
-    {
-        $where = "";
-        if (!empty($params)) {
-            $where .= "WHERE ";
-            foreach ($params as $k => $v) {
-                $where .= "o.$k = \"$v\" AND ";
-            }
-            $where = trim($where, 'AND ');
-        }
-
-        $queryString = "";
-        switch ($this->objectType) {
-            case self::OBJECT_TYPE_NODE:
-                $queryString = "MATCH (o:$group) $where";
-                break;
-            case self::OBJECT_TYPE_RELATION_TYPE:
-                $queryString = "MATCH ()-[o:$group]-() $where";
-                break;
-        }
-        $queryString .= " RETURN o LIMIT 1";
-
-        try {
-            $query  = new Query($this->client, $queryString, []);
-            $result = $query->getResultSet();
-            if ($result->offsetExists(0)) {
-                $result = $result->offsetGet(0);
-                if ($result->offsetExists(0)) {
-                    $result = $result->offsetGet(0);
-                } else {
-                    $result = null;
-                }
-            } else {
-                $result = null;
-            }
-
-            return $result;
-        } catch (\Exception $e) {
-            Logger::logError(__CLASS__ . ' ' . __FUNCTION__ . ' ' . $e->getMessage());
-            return null;
         }
     }
 }

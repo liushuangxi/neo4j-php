@@ -21,5 +21,8 @@
     "psr-4": {
       "Liushuangxi\\Neo4j\\": "src/neo4j-php"
     }
+  },
+  "require": {
+    "psr/log": "^1.1"
   }
 }

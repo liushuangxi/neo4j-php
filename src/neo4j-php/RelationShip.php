@@ -14,7 +14,7 @@ class RelationShip extends Object
     /**
      * @var string
      */
-    public $objectType = Object::OBJECT_TYPE_RELATION_TYPE;
+    public $objectType = Object::OBJECT_TYPE_RELATION_SHIP;
 
     /**
      * @var Node|null
@@ -70,7 +70,7 @@ class RelationShip extends Object
                 return false;
             }
 
-            if (!isset($info['type'])) {
+            if (empty($type)) {
                 Logger::logInfo(__CLASS__ . ' ' . __FUNCTION__ . ' type is empty');
                 return false;
             }
